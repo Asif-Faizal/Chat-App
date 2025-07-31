@@ -6,7 +6,6 @@ import '../../domain/entities/login_request.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
-import '../../../chat/presentation/pages/chat_list_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -45,11 +44,8 @@ class _LoginPageState extends State<LoginPage> {
                 textColor: Colors.white,
               );
             } else if (state is AuthAuthenticated) {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                  builder: (context) => const ChatListPage(),
-                ),
-              );
+              // Navigation will be handled by AuthWrapper in main.dart
+              // No need to navigate manually here
             }
           },
           builder: (context, state) {
