@@ -76,22 +76,15 @@ class _AuthWrapperState extends State<AuthWrapper> {
           }
           print('AuthWrapper: Navigating to ChatListPage for user: ${state.user.id}');
           return ChatListPage(currentUser: state.user);
-        } else if (state is AuthUnauthenticated || state is AuthError) {
+        } else {
           // Disconnect socket when user logs out or error occurs
           if (socketService.isConnected) {
             print('Disconnecting socket due to logout/error');
             socketService.disconnect();
           }
-          print('AuthWrapper: Navigating to LoginPage');
-          // Pass the current state to LoginPage so it can handle errors
-          return LoginPage(currentAuthState: state);
-        } else if (state is AuthLoading) {
-          print('AuthWrapper: Login loading - staying on current page');
-          // Don't show full screen loading for login - let LoginPage handle it
-          return LoginPage(currentAuthState: state);
-        } else {
-          print('AuthWrapper: Unknown state, navigating to LoginPage');
-          return LoginPage(currentAuthState: state);
+          print('AuthWrapper: Navigating to LoginPage with state: ${state.runtimeType}');
+          // Always return a fresh LoginPage - let it handle its own state via BlocConsumer
+          return const LoginPage();
         }
       },
     );

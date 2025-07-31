@@ -6,9 +6,7 @@ import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 
 class LoginPage extends StatefulWidget {
-  final AuthState? currentAuthState;
-  
-  const LoginPage({super.key, this.currentAuthState});
+  const LoginPage({super.key});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -20,6 +18,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   String _selectedRole = 'customer';
   bool _isPasswordVisible = false;
+  String? _lastShownError; // Track last error shown to prevent duplicates
 
   @override
   void initState() {
@@ -27,29 +26,6 @@ class _LoginPageState extends State<LoginPage> {
     // Set default credentials for demo
     _emailController.text = 'swaroop.vass@gmail.com';
     _passwordController.text = '@Tyrion99';
-    
-    // Handle error state passed from AuthWrapper
-    if (widget.currentAuthState is AuthError) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final error = widget.currentAuthState as AuthError;
-        print('LoginPage: Showing error snackbar from initState: ${error.message}');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error.message),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 4),
-            action: SnackBarAction(
-              label: 'Dismiss',
-              textColor: Colors.white,
-              onPressed: () {
-                ScaffoldMessenger.of(context).hideCurrentSnackBar();
-              },
-            ),
-          ),
-        );
-      });
-    }
   }
 
   @override
@@ -63,14 +39,41 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: BlocConsumer<AuthBloc, AuthState>(
-                 listener: (context, state) {
+      body: BlocListener<AuthBloc, AuthState>(
+         listener: (context, state) {
            print('LoginPage listener triggered with state: ${state.runtimeType}');
-           if (state is AuthAuthenticated) {
+           if (state is AuthLoading) {
+             // Reset error tracking when new login attempt starts
+             _lastShownError = null;
+           } else if (state is AuthError) {
+             if (_lastShownError != state.message) {
+               _lastShownError = state.message;
+               print('LoginPage: Showing error snackbar from listener: ${state.message}');
+               ScaffoldMessenger.of(context).showSnackBar(
+                 SnackBar(
+                   content: Text(state.message),
+                   backgroundColor: Colors.red,
+                   behavior: SnackBarBehavior.floating,
+                   duration: const Duration(seconds: 4),
+                   action: SnackBarAction(
+                     label: 'Dismiss',
+                     textColor: Colors.white,
+                     onPressed: () {
+                       ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                     },
+                   ),
+                 ),
+               );
+             } else {
+               print('LoginPage: Skipping duplicate error snackbar: ${state.message}');
+             }
+           } else if (state is AuthAuthenticated) {
              print('LoginPage: AuthAuthenticated received - navigation handled by AuthWrapper');
            }
          },
-        builder: (context, state) {
+        child: BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, state) {
+            print('LoginPage builder called with state: ${state.runtimeType}');
           return SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
@@ -288,7 +291,8 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           );
-        },
+          },
+        ),
       ),
     );
   }

@@ -21,11 +21,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     _instanceId = DateTime.now().millisecondsSinceEpoch.toString();
     print('AuthBloc instance created: $_instanceId');
     
-    // Add stream listener for debugging
-    stream.listen((state) {
-      print('AuthBloc ($_instanceId) stream emitted: ${state.runtimeType}');
-    });
-    
     on<LoginEvent>(_onLogin);
     on<LogoutEvent>(_onLogout);
     on<CheckAuthStatusEvent>(_onCheckAuthStatus);
@@ -52,11 +47,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         print('AuthBloc ($_instanceId): About to emit AuthAuthenticated state');
         emit(authState);
         print('AuthBloc ($_instanceId): AuthAuthenticated state emitted');
-        
-        // Add a small delay to see if this helps with state propagation
-        Future.delayed(const Duration(milliseconds: 100), () {
-          print('AuthBloc ($_instanceId): Current state after delay: ${state.runtimeType}');
-        });
       },
     );
   }
