@@ -95,9 +95,29 @@ class AuthRepositoryImpl implements AuthRepository {
         );
       case DioExceptionType.badResponse:
         final statusCode = error.response?.statusCode;
-        final message = error.response?.data['message'] ?? 'Server error occurred';
         
+        // Extract error message from API response
+        String message = 'Server error occurred';
+        if (error.response?.data != null) {
+          final responseData = error.response!.data;
+          if (responseData is Map<String, dynamic>) {
+            // Try different common error message fields
+            message = responseData['msg'] ?? 
+                     responseData['message'] ?? 
+                     responseData['error'] ?? 
+                     message;
+          } else if (responseData is String) {
+            message = responseData;
+          }
+        }
+        
+        // Return appropriate failure type based on status code
         if (statusCode == 401) {
+          return AuthFailure(
+            message: message,
+            statusCode: statusCode,
+          );
+        } else if (statusCode == 400) {
           return AuthFailure(
             message: message,
             statusCode: statusCode,

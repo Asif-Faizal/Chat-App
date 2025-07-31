@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import '../../domain/entities/login_request.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
@@ -34,11 +33,20 @@ class _LoginPageState extends State<LoginPage> {
       body: BlocConsumer<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthError) {
-              Fluttertoast.showToast(
-                msg: state.message,
-                toastLength: Toast.LENGTH_LONG,
-                backgroundColor: Colors.red,
-                textColor: Colors.white,
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                  duration: const Duration(seconds: 4),
+                  action: SnackBarAction(
+                    label: 'Dismiss',
+                    textColor: Colors.white,
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    },
+                  ),
+                ),
               );
             } else if (state is AuthAuthenticated) {
               // Navigation will be handled by AuthWrapper in main.dart
