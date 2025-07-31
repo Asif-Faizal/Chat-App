@@ -3,13 +3,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 
 class ChatDetailUICubit extends Cubit<ChatDetailUIState> {
-  ChatDetailUICubit() : super(const ChatDetailUIState());
+  late TextEditingController _messageController;
+  
+  ChatDetailUICubit() : super(const ChatDetailUIState()) {
+    _messageController = TextEditingController();
+  }
+
+  TextEditingController get messageController => _messageController;
 
   void updateMessageText(String text) {
     emit(state.copyWith(messageText: text));
   }
 
   void clearMessageText() {
+    _messageController.clear();
     emit(state.copyWith(messageText: ''));
   }
 
@@ -19,17 +26,34 @@ class ChatDetailUICubit extends Cubit<ChatDetailUIState> {
 
   void scrollToBottom() {
     final controller = state.scrollController;
+    if (controller != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (controller.hasClients) {
+          controller.animateTo(
+            controller.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
+  }
+
+  void scrollToBottomImmediate() {
+    final controller = state.scrollController;
     if (controller != null && controller.hasClients) {
-      controller.animateTo(
-        controller.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
+      controller.jumpTo(controller.position.maxScrollExtent);
     }
   }
 
   void reset() {
     emit(const ChatDetailUIState());
+  }
+
+  @override
+  Future<void> close() {
+    _messageController.dispose();
+    return super.close();
   }
 }
 

@@ -36,13 +36,24 @@ class ChatDetailPage extends StatelessWidget {
           },
         ),
         BlocProvider<ChatDetailUICubit>(
-          create: (context) => getIt<ChatDetailUICubit>(),
+          create: (context) {
+            final cubit = getIt<ChatDetailUICubit>();
+            // Initialize scroll controller immediately
+            final scrollController = ScrollController();
+            cubit.setScrollController(scrollController);
+            return cubit;
+          },
         ),
       ],
       child: BlocListener<ChatDetailBloc, ChatDetailState>(
         listener: (context, state) {
           if (state is ChatDetailLoaded) {
-            context.read<ChatDetailUICubit>().scrollToBottom();
+            // Scroll to bottom when messages are loaded
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                context.read<ChatDetailUICubit>().scrollToBottomImmediate();
+              });
+            });
           } else if (state is MessageSendError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -308,6 +319,7 @@ class ChatDetailPage extends StatelessWidget {
                 child: Container(
                   decoration: AppTheme.messageInputDecoration,
                   child: TextField(
+                    controller: context.read<ChatDetailUICubit>().messageController,
                     onChanged: (value) {
                       context.read<ChatDetailUICubit>().updateMessageText(value);
                     },
@@ -363,6 +375,11 @@ class ChatDetailPage extends StatelessWidget {
 
       context.read<ChatDetailBloc>().add(SendMessageEvent(request));
       context.read<ChatDetailUICubit>().clearMessageText();
+      
+      // Scroll to bottom after sending message
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<ChatDetailUICubit>().scrollToBottom();
+      });
     }
   }
 
