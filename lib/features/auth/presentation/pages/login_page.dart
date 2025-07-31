@@ -31,28 +31,35 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: BlocConsumer<AuthBloc, AuthState>(
-        listener: (context, state) {
-          if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-                behavior: SnackBarBehavior.floating,
-                duration: const Duration(seconds: 4),
-                action: SnackBarAction(
-                  label: 'Dismiss',
-                  textColor: Colors.white,
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                  },
-                ),
-              ),
-            );
-          } else if (state is AuthAuthenticated) {
-            // Navigation will be handled by AuthWrapper in main.dart
-            // No need to navigate manually here
-          }
-        },
+                 listener: (context, state) {
+           print('LoginPage listener triggered with state: ${state.runtimeType}');
+           if (state is AuthError) {
+             print('LoginPage: Showing error snackbar for: ${state.message}');
+             ScaffoldMessenger.of(context).showSnackBar(
+               SnackBar(
+                 content: Text(state.message),
+                 backgroundColor: Colors.red,
+                 behavior: SnackBarBehavior.floating,
+                 duration: const Duration(seconds: 4),
+                 action: SnackBarAction(
+                   label: 'Dismiss',
+                   textColor: Colors.white,
+                   onPressed: () {
+                     ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                   },
+                 ),
+               ),
+             );
+             // Clear the error state after showing it
+             Future.delayed(const Duration(milliseconds: 500), () {
+               if (mounted) {
+                 context.read<AuthBloc>().add(const ClearErrorEvent());
+               }
+             });
+           } else if (state is AuthAuthenticated) {
+             print('LoginPage: AuthAuthenticated received - navigation handled by AuthWrapper');
+           }
+         },
         builder: (context, state) {
           return SafeArea(
             child: Padding(

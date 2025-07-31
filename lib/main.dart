@@ -53,17 +53,17 @@ class AuthWrapper extends StatefulWidget {
 class _AuthWrapperState extends State<AuthWrapper> {
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<AuthBloc, AuthState>(
-      listenWhen: (previous, current) {
-        print('AuthWrapper listenWhen: ${previous.runtimeType} -> ${current.runtimeType}');
-        return true; // Listen to all state changes
-      },
+    print('AuthWrapper build method called');
+    
+    return BlocBuilder<AuthBloc, AuthState>(
       buildWhen: (previous, current) {
         print('AuthWrapper buildWhen: ${previous.runtimeType} -> ${current.runtimeType}');
         return true; // Rebuild on all state changes
       },
-      listener: (context, state) {
-        print('AuthWrapper listener triggered with state: ${state.runtimeType}');
+      builder: (context, state) {
+        final authBloc = context.read<AuthBloc>();
+        print('AuthWrapper builder called with state: ${state.runtimeType}');
+        print('AuthWrapper using AuthBloc: ${authBloc.hashCode}');
         
         // Handle socket connection based on auth state
         final socketService = getIt<SocketService>();
@@ -74,31 +74,25 @@ class _AuthWrapperState extends State<AuthWrapper> {
             print('Connecting socket for user: ${state.user.id}');
             socketService.connect(state.user.id);
           }
+          print('AuthWrapper: Navigating to ChatListPage for user: ${state.user.id}');
+          return ChatListPage(currentUser: state.user);
         } else if (state is AuthUnauthenticated || state is AuthError) {
           // Disconnect socket when user logs out or error occurs
           if (socketService.isConnected) {
             print('Disconnecting socket due to logout/error');
             socketService.disconnect();
           }
-        }
-      },
-      builder: (context, state) {
-        final authBloc = context.read<AuthBloc>();
-        print('AuthWrapper builder called with state: ${state.runtimeType}');
-        print('AuthWrapper using AuthBloc: ${authBloc.hashCode}');
-        
-        if (state is AuthLoading) {
+          print('AuthWrapper: Navigating to LoginPage');
+          return const LoginPage();
+        } else if (state is AuthLoading) {
           print('AuthWrapper: Showing loading screen');
           return const Scaffold(
             body: Center(
               child: CircularProgressIndicator(),
             ),
           );
-        } else if (state is AuthAuthenticated) {
-          print('AuthWrapper: Navigating to ChatListPage for user: ${state.user.id}');
-          return ChatListPage(currentUser: state.user);
         } else {
-          print('AuthWrapper: Navigating to LoginPage');
+          print('AuthWrapper: Unknown state, navigating to LoginPage');
           return const LoginPage();
         }
       },
