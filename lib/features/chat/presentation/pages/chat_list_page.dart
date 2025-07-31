@@ -206,8 +206,8 @@ class ChatListPage extends StatelessWidget {
                         ],
                       ],
                     ),
-                    onTap: () {
-                      Navigator.of(context).push(
+                    onTap: () async {
+                      await Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => BlocProvider(
                             create: (context) => getIt<ChatDetailBloc>(),
@@ -217,6 +217,11 @@ class ChatListPage extends StatelessWidget {
                             ),
                           ),
                         ),
+                      );
+                      
+                      // Always refresh chat list when returning from chat detail
+                      context.read<ChatListBloc>().add(
+                        RefreshChatListEvent(currentUser.id),
                       );
                     },
                   ),

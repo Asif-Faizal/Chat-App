@@ -65,53 +65,60 @@ class ChatDetailPage extends StatelessWidget {
         },
         child: BlocBuilder<ChatDetailBloc, ChatDetailState>(
           builder: (context, state) {
-            return Scaffold(
-              appBar: AppBar(
-                title: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 18,
-                      backgroundColor: AppTheme.primaryLightColor,
-                      child: Text(
-                        otherParticipant?.name.isNotEmpty == true
-                            ? otherParticipant!.name[0].toUpperCase()
-                            : '?',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.textOnPrimaryColor,
-                          fontSize: 16,
+            return WillPopScope(
+              onWillPop: () async {
+                // Trigger chat list refresh when popping
+                Navigator.of(context).pop(true);
+                return false; // Prevent default pop behavior since we're handling it
+              },
+              child: Scaffold(
+                appBar: AppBar(
+                  title: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: AppTheme.primaryLightColor,
+                        child: Text(
+                          otherParticipant?.name.isNotEmpty == true
+                              ? otherParticipant!.name[0].toUpperCase()
+                              : '?',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textOnPrimaryColor,
+                            fontSize: 16,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            otherParticipant?.name ?? 'Unknown User',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          if (otherParticipant?.role != null)
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             Text(
-                              otherParticipant!.role.toUpperCase(),
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                color: AppTheme.textSecondaryColor,
-                              ),
+                              otherParticipant?.name ?? 'Unknown User',
+                              style: Theme.of(context).textTheme.titleLarge,
                             ),
-                        ],
+                            if (otherParticipant?.role != null)
+                              Text(
+                                otherParticipant!.role.toUpperCase(),
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  color: AppTheme.textSecondaryColor,
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
+                    ],
+                  ),
+                ),
+                body: Column(
+                  children: [
+                    Expanded(
+                      child: _buildMessageList(context, state),
                     ),
+                    _buildMessageInput(context, state),
                   ],
                 ),
-              ),
-              body: Column(
-                children: [
-                  Expanded(
-                    child: _buildMessageList(context, state),
-                  ),
-                  _buildMessageInput(context, state),
-                ],
               ),
             );
           },
