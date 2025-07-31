@@ -14,6 +14,8 @@ import '../../features/chat/domain/usecases/get_chat_messages_usecase.dart';
 import '../../features/chat/domain/usecases/send_message_usecase.dart';
 import '../../features/chat/presentation/bloc/chat_list_bloc.dart';
 import '../../features/chat/presentation/bloc/chat_detail_bloc.dart';
+import '../../features/auth/presentation/cubit/login_form_cubit.dart';
+import '../../features/chat/presentation/cubit/chat_detail_ui_cubit.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -64,4 +66,8 @@ Future<void> setupDependencyInjection() async {
     sendMessageUsecase: getIt<SendMessageUsecase>(),
     socketService: getIt<SocketService>(),
   ));
+
+  // Cubits
+  getIt.registerFactory(() => LoginFormCubit());
+  getIt.registerFactory(() => ChatDetailUICubit());
 }

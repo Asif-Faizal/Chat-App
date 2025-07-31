@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/di/dependency_injection.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/chat_model.dart';
 import '../../domain/entities/message_model.dart';
@@ -8,8 +9,9 @@ import '../../domain/entities/send_message_request.dart';
 import '../bloc/chat_detail_bloc.dart';
 import '../bloc/chat_detail_event.dart';
 import '../bloc/chat_detail_state.dart';
+import '../cubit/chat_detail_ui_cubit.dart';
 
-class ChatDetailPage extends StatefulWidget {
+class ChatDetailPage extends StatelessWidget {
   final ChatModel chat;
   final String currentUserId;
 
@@ -20,120 +22,94 @@ class ChatDetailPage extends StatefulWidget {
   });
 
   @override
-  State<ChatDetailPage> createState() => _ChatDetailPageState();
-}
-
-class _ChatDetailPageState extends State<ChatDetailPage> {
-  final TextEditingController _messageController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
-  ChatDetailBloc? _chatDetailBloc;
-  bool _isInitialized = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Safely store the bloc reference when dependencies are available
-    if (!_isInitialized) {
-      _chatDetailBloc = context.read<ChatDetailBloc>();
-      _chatDetailBloc?.add(LoadChatMessagesEvent(widget.chat.id));
-      _chatDetailBloc?.add(JoinChatEvent(widget.chat.id));
-      _isInitialized = true;
-    }
-  }
-
-  @override
-  void dispose() {
-    // Use stored reference to avoid accessing deactivated widget's context
-    _chatDetailBloc?.add(LeaveChatEvent(widget.chat.id));
-    _messageController.dispose();
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final otherParticipant = widget.chat.getOtherParticipant(widget.currentUserId);
+    final otherParticipant = chat.getOtherParticipant(currentUserId);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: AppTheme.primaryLightColor,
-              child: Text(
-                otherParticipant?.name.isNotEmpty == true
-                    ? otherParticipant!.name[0].toUpperCase()
-                    : '?',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textOnPrimaryColor,
-                  fontSize: 16,
-                ),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<ChatDetailBloc>(
+          create: (context) {
+            final bloc = getIt<ChatDetailBloc>();
+            bloc.add(LoadChatMessagesEvent(chat.id));
+            bloc.add(JoinChatEvent(chat.id));
+            return bloc;
+          },
+        ),
+        BlocProvider<ChatDetailUICubit>(
+          create: (context) => getIt<ChatDetailUICubit>(),
+        ),
+      ],
+      child: BlocListener<ChatDetailBloc, ChatDetailState>(
+        listener: (context, state) {
+          if (state is ChatDetailLoaded) {
+            context.read<ChatDetailUICubit>().scrollToBottom();
+          } else if (state is MessageSendError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: AppTheme.errorColor,
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    otherParticipant?.name ?? 'Unknown User',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  if (otherParticipant?.role != null)
-                    Text(
-                      otherParticipant!.role.toUpperCase(),
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: AppTheme.textSecondaryColor,
+            );
+          }
+        },
+        child: BlocBuilder<ChatDetailBloc, ChatDetailState>(
+          builder: (context, state) {
+            return Scaffold(
+              appBar: AppBar(
+                title: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 18,
+                      backgroundColor: AppTheme.primaryLightColor,
+                      child: Text(
+                        otherParticipant?.name.isNotEmpty == true
+                            ? otherParticipant!.name[0].toUpperCase()
+                            : '?',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textOnPrimaryColor,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            otherParticipant?.name ?? 'Unknown User',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          if (otherParticipant?.role != null)
+                            Text(
+                              otherParticipant!.role.toUpperCase(),
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                color: AppTheme.textSecondaryColor,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              body: Column(
+                children: [
+                  Expanded(
+                    child: _buildMessageList(context, state),
+                  ),
+                  _buildMessageInput(context, state),
                 ],
               ),
-            ),
-          ],
-        ),
-      ),
-      body: BlocConsumer<ChatDetailBloc, ChatDetailState>(
-          listener: (context, state) {
-            if (state is ChatDetailLoaded) {
-              _scrollToBottom();
-            } else if (state is MessageSendError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: AppTheme.errorColor,
-                ),
-              );
-            }
-          },
-          builder: (context, state) {
-            return Column(
-              children: [
-                Expanded(
-                  child: _buildMessageList(state),
-                ),
-                _buildMessageInput(state),
-              ],
             );
           },
         ),
+      ),
     );
   }
 
-  Widget _buildMessageList(ChatDetailState state) {
+  Widget _buildMessageList(BuildContext context, ChatDetailState state) {
     if (state is ChatDetailLoading) {
       return const Center(
         child: CircularProgressIndicator(),
@@ -173,20 +149,24 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         );
       }
 
-      return ListView.builder(
-        controller: _scrollController,
-        padding: const EdgeInsets.all(16),
-        itemCount: messages.length,
-        itemBuilder: (context, index) {
-          final message = messages[index];
-          final isMe = message.senderId == widget.currentUserId;
-          final showDateSeparator = _shouldShowDateSeparator(messages, index);
+      return BlocBuilder<ChatDetailUICubit, ChatDetailUIState>(
+        builder: (context, uiState) {
+          return ListView.builder(
+            controller: uiState.scrollController,
+            padding: const EdgeInsets.all(16),
+            itemCount: messages.length,
+            itemBuilder: (context, index) {
+              final message = messages[index];
+              final isMe = message.senderId == currentUserId;
+              final showDateSeparator = _shouldShowDateSeparator(messages, index);
 
-          return Column(
-            children: [
-              if (showDateSeparator) _buildDateSeparator(message.createdAt),
-              _buildMessageBubble(message, isMe),
-            ],
+              return Column(
+                children: [
+                  if (showDateSeparator) _buildDateSeparator(context, message.createdAt),
+                  _buildMessageBubble(context, message, isMe),
+                ],
+              );
+            },
           );
         },
       );
@@ -195,31 +175,31 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-                      Icon(
-            Icons.error_outline,
-            size: 80,
-            color: AppTheme.errorColor,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Error loading messages',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            Icon(
+              Icons.error_outline,
+              size: 80,
               color: AppTheme.errorColor,
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            state.message,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textSecondaryColor,
+            const SizedBox(height: 16),
+            Text(
+              'Error loading messages',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: AppTheme.errorColor,
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
+            const SizedBox(height: 8),
+            Text(
+              state.message,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
                 context.read<ChatDetailBloc>().add(
-                  LoadChatMessagesEvent(widget.chat.id),
+                  LoadChatMessagesEvent(chat.id),
                 );
               },
               child: const Text('Retry'),
@@ -232,7 +212,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     return const SizedBox.shrink();
   }
 
-  Widget _buildDateSeparator(DateTime date) {
+  Widget _buildDateSeparator(BuildContext context, DateTime date) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 16),
       child: Center(
@@ -250,7 +230,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     );
   }
 
-  Widget _buildMessageBubble(MessageModel message, bool isMe) {
+  Widget _buildMessageBubble(BuildContext context, MessageModel message, bool isMe) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -309,74 +289,80 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     );
   }
 
-  Widget _buildMessageInput(ChatDetailState state) {
+  Widget _buildMessageInput(BuildContext context, ChatDetailState state) {
     final isSending = state is ChatDetailLoaded && state.isSendingMessage;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        border: Border(
-          top: BorderSide(color: AppTheme.borderColor, width: 0.2),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              decoration: AppTheme.messageInputDecoration,
-              child: TextField(
-                controller: _messageController,
-                decoration: const InputDecoration(
-                  hintText: 'Type a message...',
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
+    return BlocBuilder<ChatDetailUICubit, ChatDetailUIState>(
+      builder: (context, uiState) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceColor,
+            border: Border(
+              top: BorderSide(color: AppTheme.borderColor, width: 0.2),
+            ),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Container(
+                  decoration: AppTheme.messageInputDecoration,
+                  child: TextField(
+                    onChanged: (value) {
+                      context.read<ChatDetailUICubit>().updateMessageText(value);
+                    },
+                    decoration: const InputDecoration(
+                      hintText: 'Type a message...',
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                    ),
+                    maxLines: null,
+                    textCapitalization: TextCapitalization.sentences,
                   ),
                 ),
-                maxLines: null,
-                textCapitalization: TextCapitalization.sentences,
               ),
-            ),
+              const SizedBox(width: 8),
+              Container(
+                decoration: AppTheme.sendButtonDecoration,
+                child: IconButton(
+                  onPressed: isSending ? null : () => _sendMessage(context),
+                  icon: isSending
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: AppTheme.textOnPrimaryColor,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Icon(
+                          Icons.send,
+                          color: AppTheme.textOnPrimaryColor,
+                        ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          Container(
-            decoration: AppTheme.sendButtonDecoration,
-            child: IconButton(
-              onPressed: isSending ? null : _sendMessage,
-              icon: isSending
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: AppTheme.textOnPrimaryColor,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : Icon(
-                      Icons.send,
-                      color: AppTheme.textOnPrimaryColor,
-                    ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  void _sendMessage() {
-    final content = _messageController.text.trim();
-    if (content.isNotEmpty && _chatDetailBloc != null) {
+  void _sendMessage(BuildContext context) {
+    final content = context.read<ChatDetailUICubit>().state.messageText.trim();
+    if (content.isNotEmpty) {
       final request = SendMessageRequest(
-        chatId: widget.chat.id,
-        senderId: widget.currentUserId,
+        chatId: chat.id,
+        senderId: currentUserId,
         content: content,
         messageType: 'text',
       );
 
-      _chatDetailBloc!.add(SendMessageEvent(request));
-      _messageController.clear();
+      context.read<ChatDetailBloc>().add(SendMessageEvent(request));
+      context.read<ChatDetailUICubit>().clearMessageText();
     }
   }
 
