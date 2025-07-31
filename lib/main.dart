@@ -22,23 +22,23 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Chat App',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-        appBarTheme: const AppBarTheme(
-          centerTitle: false,
-          elevation: 1,
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black87,
+    return BlocProvider(
+      create: (context) => getIt<AuthBloc>()..add(const CheckAuthStatusEvent()),
+      child: MaterialApp(
+        title: 'Chat App',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          useMaterial3: true,
+          appBarTheme: const AppBarTheme(
+            centerTitle: false,
+            elevation: 1,
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black87,
+          ),
         ),
+        home: const AuthWrapper(),
+        debugShowCheckedModeBanner: false,
       ),
-      home: BlocProvider(
-        create: (context) => getIt<AuthBloc>()..add(const CheckAuthStatusEvent()),
-        child: const AuthWrapper(),
-      ),
-      debugShowCheckedModeBanner: false,
     );
   }
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import '../../../../core/di/dependency_injection.dart';
 import '../../domain/entities/login_request.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
@@ -32,9 +31,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: BlocProvider(
-        create: (context) => getIt<AuthBloc>(),
-        child: BlocConsumer<AuthBloc, AuthState>(
+      body: BlocConsumer<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthError) {
               Fluttertoast.showToast(
@@ -271,7 +268,6 @@ class _LoginPageState extends State<LoginPage> {
             );
           },
         ),
-      ),
-    );
+      );
   }
 }
