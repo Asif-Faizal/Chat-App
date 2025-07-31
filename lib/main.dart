@@ -62,7 +62,7 @@ class AuthWrapper extends StatelessWidget {
           if (!socketService.isConnected) {
             socketService.connect(state.user.id);
           }
-          return const ChatListPage();
+          return ChatListPage(currentUser: state.user);
         } else {
           return const LoginPage();
         }

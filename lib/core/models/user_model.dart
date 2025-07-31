@@ -21,16 +21,16 @@ class UserModel extends Equatable {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['_id'] ?? json['id'] ?? '',
-      email: json['email'] ?? '',
-      name: json['name'] ?? json['username'] ?? '',
-      role: json['role'] ?? '',
-      profileImage: json['profileImage'],
-      createdAt: json['createdAt'] != null 
-          ? DateTime.tryParse(json['createdAt']) 
+      id: json['_id'] as String? ?? json['id'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      name: json['name'] as String? ?? json['username'] as String? ?? '',
+      role: json['role'] as String? ?? '',
+      profileImage: json['profileImage'] as String? ?? json['profile'] as String?,
+      createdAt: json['createdAt'] is String 
+          ? DateTime.tryParse(json['createdAt'] as String) 
           : null,
-      updatedAt: json['updatedAt'] != null 
-          ? DateTime.tryParse(json['updatedAt']) 
+      updatedAt: json['updatedAt'] is String 
+          ? DateTime.tryParse(json['updatedAt'] as String) 
           : null,
     );
   }

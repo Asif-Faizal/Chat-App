@@ -21,20 +21,55 @@ class ChatModel extends Equatable {
   });
 
   factory ChatModel.fromJson(Map<String, dynamic> json) {
-    return ChatModel(
-      id: json['_id'] ?? json['id'] ?? '',
-      participants: (json['participants'] as List?)
-              ?.map((p) => UserModel.fromJson(p))
-              .toList() ??
-          [],
-      lastMessage: json['lastMessage']?['content'],
-      lastMessageTime: json['lastMessage']?['createdAt'] != null
-          ? DateTime.tryParse(json['lastMessage']['createdAt'])
-          : null,
-      unreadCount: json['unreadCount'] ?? 0,
-      createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
-    );
+    try {
+      // Parse participants safely
+      List<UserModel> participantsList = [];
+      if (json['participants'] is List) {
+        participantsList = (json['participants'] as List)
+            .map((p) {
+              try {
+                return UserModel.fromJson(p as Map<String, dynamic>);
+              } catch (e) {
+                print('Error parsing participant: $e');
+                return null;
+              }
+            })
+            .where((p) => p != null)
+            .cast<UserModel>()
+            .toList();
+      }
+
+      // Parse lastMessage safely
+      String? lastMessageContent;
+      DateTime? lastMessageTime;
+      
+      if (json['lastMessage'] is Map<String, dynamic>) {
+        final lastMessageData = json['lastMessage'] as Map<String, dynamic>;
+        lastMessageContent = lastMessageData['content'] as String?;
+        if (lastMessageData['createdAt'] is String) {
+          lastMessageTime = DateTime.tryParse(lastMessageData['createdAt'] as String);
+        }
+      }
+
+      return ChatModel(
+        id: json['_id'] as String? ?? json['id'] as String? ?? '',
+        participants: participantsList,
+        lastMessage: lastMessageContent,
+        lastMessageTime: lastMessageTime,
+        unreadCount: json['unreadCount'] as int? ?? 0,
+        createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+        updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? DateTime.now(),
+      );
+    } catch (e) {
+      print('Error parsing ChatModel: $e');
+      // Return a default chat model to prevent crashes
+      return ChatModel(
+        id: json['_id'] as String? ?? json['id'] as String? ?? '',
+        participants: [],
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+    }
   }
 
   Map<String, dynamic> toJson() {

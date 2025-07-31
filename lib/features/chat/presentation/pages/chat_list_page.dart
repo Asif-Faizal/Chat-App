@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/di/dependency_injection.dart';
+import '../../../../core/models/user_model.dart';
 import '../../../../core/services/local_storage_service.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
@@ -13,7 +14,9 @@ import '../bloc/chat_list_state.dart';
 import 'chat_detail_page.dart';
 
 class ChatListPage extends StatefulWidget {
-  const ChatListPage({super.key});
+  final UserModel currentUser;
+  
+  const ChatListPage({super.key, required this.currentUser});
 
   @override
   State<ChatListPage> createState() => _ChatListPageState();
@@ -42,8 +45,19 @@ class _ChatListPageState extends State<ChatListPage> {
     currentUserId = await localStorageService.getUserId();
     currentUserRole = await localStorageService.getUserRole();
     
-    if (currentUserId != null) {
+    print('Retrieved userId: $currentUserId'); // Debug log
+    print('Retrieved userRole: $currentUserRole'); // Debug log
+    
+    if (currentUserId != null && currentUserId!.isNotEmpty) {
       _chatListBloc.add(LoadChatListEvent(currentUserId!));
+    } else {
+      // If no userId found, show error
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('User ID not found. Please login again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
