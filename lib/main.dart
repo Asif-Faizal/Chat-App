@@ -48,7 +48,7 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<AuthBloc, AuthState>(
+    return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         // Handle socket connection based on auth state
         final socketService = getIt<SocketService>();
@@ -67,25 +67,23 @@ class AuthWrapper extends StatelessWidget {
           }
         }
       },
-      child: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          print('AuthWrapper state: ${state.runtimeType}');
-          
-          if (state is AuthLoading) {
-            return const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
-              ),
-            );
-          } else if (state is AuthAuthenticated) {
-            print('Navigating to ChatListPage for user: ${state.user.id}');
-            return ChatListPage(currentUser: state.user);
-          } else {
-            print('Navigating to LoginPage');
-            return const LoginPage();
-          }
-        },
-      ),
+      builder: (context, state) {
+        print('AuthWrapper state: ${state.runtimeType}');
+        
+        if (state is AuthLoading) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        } else if (state is AuthAuthenticated) {
+          print('Navigating to ChatListPage for user: ${state.user.id}');
+          return ChatListPage(currentUser: state.user);
+        } else {
+          print('Navigating to LoginPage');
+          return const LoginPage();
+        }
+      },
     );
   }
 }

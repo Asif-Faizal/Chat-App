@@ -36,10 +36,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
       (loginResponse) {
         print('AuthBloc: Login successful for user ${loginResponse.user.id}');
-        emit(AuthAuthenticated(
+        final authState = AuthAuthenticated(
           user: loginResponse.user,
           token: loginResponse.token,
-        ));
+        );
+        print('AuthBloc: About to emit AuthAuthenticated state');
+        emit(authState);
+        print('AuthBloc: AuthAuthenticated state emitted');
       },
     );
   }
