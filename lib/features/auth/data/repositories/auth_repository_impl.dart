@@ -1,8 +1,10 @@
 import 'package:dio/dio.dart';
 import '../../../../core/config/environment.dart';
+import '../../../../core/di/dependency_injection.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/services/local_storage_service.dart';
+import '../../../../core/services/socket_service.dart';
 import '../../../../core/utils/result.dart';
 import '../../domain/entities/login_request.dart';
 import '../../domain/entities/login_response.dart';
@@ -61,6 +63,12 @@ class AuthRepositoryImpl implements AuthRepository {
       
       // Clear auth token from API client
       apiClient.clearAuthToken();
+      
+      // Disconnect socket connection
+      final socketService = getIt<SocketService>();
+      if (socketService.isConnected) {
+        socketService.disconnect();
+      }
       
       return const Success(null);
     } catch (e) {

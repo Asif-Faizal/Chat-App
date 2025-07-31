@@ -48,25 +48,44 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        if (state is AuthLoading) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        } else if (state is AuthAuthenticated) {
-          // Initialize socket connection for authenticated users
-          final socketService = getIt<SocketService>();
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        // Handle socket connection based on auth state
+        final socketService = getIt<SocketService>();
+        
+        if (state is AuthAuthenticated) {
+          // Connect socket for authenticated users
           if (!socketService.isConnected) {
+            print('Connecting socket for user: ${state.user.id}');
             socketService.connect(state.user.id);
           }
-          return ChatListPage(currentUser: state.user);
-        } else {
-          return const LoginPage();
+        } else if (state is AuthUnauthenticated || state is AuthError) {
+          // Disconnect socket when user logs out or error occurs
+          if (socketService.isConnected) {
+            print('Disconnecting socket due to logout/error');
+            socketService.disconnect();
+          }
         }
       },
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          print('AuthWrapper state: ${state.runtimeType}');
+          
+          if (state is AuthLoading) {
+            return const Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
+          } else if (state is AuthAuthenticated) {
+            print('Navigating to ChatListPage for user: ${state.user.id}');
+            return ChatListPage(currentUser: state.user);
+          } else {
+            print('Navigating to LoginPage');
+            return const LoginPage();
+          }
+        },
+      ),
     );
   }
 }

@@ -24,27 +24,41 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
+    print('AuthBloc: Login attempt for ${event.loginRequest.email}');
     emit(const AuthLoading());
     
     final result = await loginUsecase(event.loginRequest);
     
     result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (loginResponse) => emit(AuthAuthenticated(
-        user: loginResponse.user,
-        token: loginResponse.token,
-      )),
+      (failure) {
+        print('AuthBloc: Login failed - ${failure.message}');
+        emit(AuthError(failure.message));
+      },
+      (loginResponse) {
+        print('AuthBloc: Login successful for user ${loginResponse.user.id}');
+        emit(AuthAuthenticated(
+          user: loginResponse.user,
+          token: loginResponse.token,
+        ));
+      },
     );
   }
 
   Future<void> _onLogout(LogoutEvent event, Emitter<AuthState> emit) async {
+    print('AuthBloc: Logout initiated');
     emit(const AuthLoading());
     
     final result = await logoutUsecase();
     
     result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (_) => emit(const AuthUnauthenticated()),
+      (failure) {
+        print('AuthBloc: Logout failed - ${failure.message}');
+        emit(AuthError(failure.message));
+      },
+      (_) {
+        print('AuthBloc: Logout successful, emitting AuthUnauthenticated');
+        emit(const AuthUnauthenticated());
+      },
     );
   }
 
@@ -52,27 +66,35 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     CheckAuthStatusEvent event,
     Emitter<AuthState> emit,
   ) async {
+    print('AuthBloc: Checking auth status');
     emit(const AuthLoading());
     
     try {
       final isLoggedIn = await localStorageService.isLoggedIn();
+      print('AuthBloc: IsLoggedIn = $isLoggedIn');
       
       if (isLoggedIn) {
         final userData = await localStorageService.getUserData();
         final token = await localStorageService.getToken();
         
+        print('AuthBloc: UserData = ${userData != null}, Token = ${token != null}');
+        
         if (userData != null && token != null) {
+          print('AuthBloc: Emitting AuthAuthenticated for existing session');
           emit(AuthAuthenticated(
             user: UserModel.fromJson(userData),
             token: token,
           ));
         } else {
+          print('AuthBloc: Missing userData or token, emitting AuthUnauthenticated');
           emit(const AuthUnauthenticated());
         }
       } else {
+        print('AuthBloc: Not logged in, emitting AuthUnauthenticated');
         emit(const AuthUnauthenticated());
       }
     } catch (e) {
+      print('AuthBloc: Error checking auth status - $e');
       emit(AuthError('Failed to check authentication status: $e'));
     }
   }
