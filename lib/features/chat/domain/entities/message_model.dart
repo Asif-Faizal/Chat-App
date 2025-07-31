@@ -27,18 +27,49 @@ class MessageModel extends Equatable {
   });
 
   factory MessageModel.fromJson(Map<String, dynamic> json) {
-    return MessageModel(
-      id: json['_id'] ?? json['id'] ?? '',
-      chatId: json['chatId'] ?? '',
-      senderId: json['senderId'] ?? '',
-      sender: json['sender'] != null ? UserModel.fromJson(json['sender']) : null,
-      content: json['content'] ?? '',
-      messageType: json['messageType'] ?? 'text',
-      fileUrl: json['fileUrl'],
-      createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
-      isRead: json['isRead'] ?? false,
-    );
+    try {
+      print('Parsing MessageModel from JSON: ${json.keys.toList()}');
+      
+      // Parse sender safely
+      UserModel? senderModel;
+      if (json['sender'] != null) {
+        try {
+          if (json['sender'] is Map<String, dynamic>) {
+            senderModel = UserModel.fromJson(json['sender'] as Map<String, dynamic>);
+          } else {
+            print('Sender field is not a Map: ${json['sender'].runtimeType}');
+          }
+        } catch (e) {
+          print('Error parsing sender: $e');
+        }
+      }
+      
+      return MessageModel(
+        id: json['_id'] as String? ?? json['id'] as String? ?? '',
+        chatId: json['chatId'] as String? ?? '',
+        senderId: json['senderId'] as String? ?? '',
+        sender: senderModel,
+        content: json['content'] as String? ?? '',
+        messageType: json['messageType'] as String? ?? 'text',
+        fileUrl: json['fileUrl'] as String?,
+        createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+        updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? DateTime.now(),
+        isRead: json['isRead'] as bool? ?? false,
+      );
+    } catch (e) {
+      print('Error parsing MessageModel: $e');
+      print('JSON data: $json');
+      // Return a default message model to prevent crashes
+      return MessageModel(
+        id: json['_id'] as String? ?? json['id'] as String? ?? '',
+        chatId: json['chatId'] as String? ?? '',
+        senderId: json['senderId'] as String? ?? '',
+        content: json['content'] as String? ?? 'Error loading message',
+        messageType: 'text',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+    }
   }
 
   Map<String, dynamic> toJson() {
