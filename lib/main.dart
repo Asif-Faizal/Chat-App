@@ -43,13 +43,28 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
 
   @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  @override
   Widget build(BuildContext context) {
     return BlocConsumer<AuthBloc, AuthState>(
+      listenWhen: (previous, current) {
+        print('AuthWrapper listenWhen: ${previous.runtimeType} -> ${current.runtimeType}');
+        return true; // Listen to all state changes
+      },
+      buildWhen: (previous, current) {
+        print('AuthWrapper buildWhen: ${previous.runtimeType} -> ${current.runtimeType}');
+        return true; // Rebuild on all state changes
+      },
       listener: (context, state) {
+        print('AuthWrapper listener triggered with state: ${state.runtimeType}');
+        
         // Handle socket connection based on auth state
         final socketService = getIt<SocketService>();
         
@@ -69,20 +84,21 @@ class AuthWrapper extends StatelessWidget {
       },
       builder: (context, state) {
         final authBloc = context.read<AuthBloc>();
+        print('AuthWrapper builder called with state: ${state.runtimeType}');
         print('AuthWrapper using AuthBloc: ${authBloc.hashCode}');
-        print('AuthWrapper state: ${state.runtimeType}');
         
         if (state is AuthLoading) {
+          print('AuthWrapper: Showing loading screen');
           return const Scaffold(
             body: Center(
               child: CircularProgressIndicator(),
             ),
           );
         } else if (state is AuthAuthenticated) {
-          print('Navigating to ChatListPage for user: ${state.user.id}');
+          print('AuthWrapper: Navigating to ChatListPage for user: ${state.user.id}');
           return ChatListPage(currentUser: state.user);
         } else {
-          print('Navigating to LoginPage');
+          print('AuthWrapper: Navigating to LoginPage');
           return const LoginPage();
         }
       },
