@@ -13,10 +13,13 @@ class LoginResponse extends Equatable {
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
+    // Check if response is encrypted and has nested data structure
+    final data = json['data'] ?? json;
+    
     return LoginResponse(
-      user: UserModel.fromJson(json['user'] ?? {}),
-      token: json['token'] ?? '',
-      message: json['message'] ?? '',
+      user: UserModel.fromJson(data['user'] ?? {}),
+      token: data['token'] ?? '',
+      message: json['message'] ?? data['message'] ?? 'Login successful',
     );
   }
 

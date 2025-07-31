@@ -22,11 +22,19 @@ class ChatListPage extends StatefulWidget {
 class _ChatListPageState extends State<ChatListPage> {
   String? currentUserId;
   String? currentUserRole;
+  late ChatListBloc _chatListBloc;
 
   @override
   void initState() {
     super.initState();
+    _chatListBloc = getIt<ChatListBloc>();
     _loadUserData();
+  }
+
+  @override
+  void dispose() {
+    _chatListBloc.close();
+    super.dispose();
   }
 
   Future<void> _loadUserData() async {
@@ -35,7 +43,7 @@ class _ChatListPageState extends State<ChatListPage> {
     currentUserRole = await localStorageService.getUserRole();
     
     if (currentUserId != null) {
-      context.read<ChatListBloc>().add(LoadChatListEvent(currentUserId!));
+      _chatListBloc.add(LoadChatListEvent(currentUserId!));
     }
   }
 
@@ -77,8 +85,8 @@ class _ChatListPageState extends State<ChatListPage> {
           ),
         ],
       ),
-      body: BlocProvider(
-        create: (context) => getIt<ChatListBloc>(),
+      body: BlocProvider.value(
+        value: _chatListBloc,
         child: BlocConsumer<ChatListBloc, ChatListState>(
           listener: (context, state) {
             if (state is ChatListError) {
@@ -117,7 +125,7 @@ class _ChatListPageState extends State<ChatListPage> {
     return RefreshIndicator(
       onRefresh: () async {
         if (currentUserId != null) {
-          context.read<ChatListBloc>().add(RefreshChatListEvent(currentUserId!));
+          _chatListBloc.add(RefreshChatListEvent(currentUserId!));
         }
       },
       child: ListView.builder(
@@ -309,7 +317,7 @@ class _ChatListPageState extends State<ChatListPage> {
           ElevatedButton(
             onPressed: () {
               if (currentUserId != null) {
-                context.read<ChatListBloc>().add(LoadChatListEvent(currentUserId!));
+                _chatListBloc.add(LoadChatListEvent(currentUserId!));
               }
             },
             child: const Text('Retry'),

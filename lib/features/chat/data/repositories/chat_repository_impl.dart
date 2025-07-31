@@ -44,14 +44,35 @@ class ChatRepositoryImpl implements ChatRepository {
   @override
   Future<Result<List<ChatModel>>> getChatList(String userId) async {
     try {
+      if (userId.isEmpty) {
+        return const Error(ValidationFailure(
+          message: 'User ID is required to fetch chats',
+        ));
+      }
+
+      print('Fetching chats for userId: $userId'); // Debug log
+      
       final response = await apiClient.dio.get(
         '${Environment.userChatsEndpoint}/$userId',
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> chatListData = response.data['chats'] ?? response.data ?? [];
+        // The API returns chats directly as an array
+        final chatListData = response.data is List 
+            ? response.data as List<dynamic>
+            : (response.data['chats'] as List<dynamic>? ?? []);
+            
         final chatList = chatListData
-            .map((chatJson) => ChatModel.fromJson(chatJson))
+            .map((chatJson) {
+              try {
+                return ChatModel.fromJson(chatJson as Map<String, dynamic>);
+              } catch (e) {
+                print('Error parsing chat: $e');
+                return null;
+              }
+            })
+            .where((chat) => chat != null)
+            .cast<ChatModel>()
             .toList();
         
         return Success(chatList);
