@@ -127,14 +127,54 @@ class ChatRepositoryImpl implements ChatRepository {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> messagesData = response.data['messages'] ?? response.data ?? [];
-        final messages = messagesData
-            .map((messageJson) => MessageModel.fromJson(messageJson))
-            .toList();
+        // Handle different possible response structures
+        List<dynamic> messagesData = [];
+        
+        if (response.data is List) {
+          // Direct array response
+          messagesData = response.data as List<dynamic>;
+        } else if (response.data is Map<String, dynamic>) {
+          // Object with messages property
+          final responseMap = response.data as Map<String, dynamic>;
+          if (responseMap.containsKey('messages')) {
+            messagesData = responseMap['messages'] as List<dynamic>? ?? [];
+          } else if (responseMap.containsKey('data')) {
+            final dataField = responseMap['data'];
+            if (dataField is List) {
+              messagesData = dataField;
+            } else if (dataField is Map<String, dynamic> && dataField.containsKey('messages')) {
+              messagesData = dataField['messages'] as List<dynamic>? ?? [];
+            }
+          }
+        }
+        
+        print('Raw messages data length: ${messagesData.length}');
+        if (messagesData.isNotEmpty) {
+          print('First message structure: ${messagesData.first}');
+        }
+        
+        final messages = <MessageModel>[];
+        
+        for (int i = 0; i < messagesData.length; i++) {
+          try {
+            final messageItem = messagesData[i];
+            if (messageItem is Map<String, dynamic>) {
+              final message = MessageModel.fromJson(messageItem);
+              messages.add(message);
+            } else {
+              print('Message item at index $i is not a Map: ${messageItem.runtimeType}');
+            }
+          } catch (e) {
+            print('Error parsing message at index $i: $e');
+            print('Message data: ${messagesData[i]}');
+            // Continue processing other messages instead of failing completely
+          }
+        }
         
         // Sort messages by created date (oldest first)
         messages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
         
+        print('Successfully parsed ${messages.length} messages');
         return Success(messages);
       } else {
         return Error(ServerFailure(

@@ -7,6 +7,7 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/pages/login_page.dart';
 import '../../domain/entities/chat_model.dart';
+import '../bloc/chat_detail_bloc.dart';
 import '../bloc/chat_list_bloc.dart';
 import '../bloc/chat_list_event.dart';
 import '../bloc/chat_list_state.dart';
@@ -229,9 +230,12 @@ class _ChatListPageState extends State<ChatListPage> {
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => ChatDetailPage(
-                      chat: chat,
-                      currentUserId: widget.currentUser.id,
+                    builder: (context) => BlocProvider(
+                      create: (context) => getIt<ChatDetailBloc>(),
+                      child: ChatDetailPage(
+                        chat: chat,
+                        currentUserId: widget.currentUser.id,
+                      ),
                     ),
                   ),
                 );

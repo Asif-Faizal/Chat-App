@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/di/dependency_injection.dart';
 import '../../domain/entities/chat_model.dart';
 import '../../domain/entities/message_model.dart';
 import '../../domain/entities/send_message_request.dart';
@@ -26,19 +25,22 @@ class ChatDetailPage extends StatefulWidget {
 class _ChatDetailPageState extends State<ChatDetailPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  late ChatDetailBloc _chatDetailBloc;
 
   @override
   void initState() {
     super.initState();
-    _chatDetailBloc = getIt<ChatDetailBloc>();
-    _chatDetailBloc.add(LoadChatMessagesEvent(widget.chat.id));
-    _chatDetailBloc.add(JoinChatEvent(widget.chat.id));
+    // Get the bloc from the context provided by BlocProvider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final chatDetailBloc = context.read<ChatDetailBloc>();
+      chatDetailBloc.add(LoadChatMessagesEvent(widget.chat.id));
+      chatDetailBloc.add(JoinChatEvent(widget.chat.id));
+    });
   }
 
   @override
   void dispose() {
-    _chatDetailBloc.add(LeaveChatEvent(widget.chat.id));
+    final chatDetailBloc = context.read<ChatDetailBloc>();
+    chatDetailBloc.add(LeaveChatEvent(widget.chat.id));
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -112,9 +114,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           ],
         ),
       ),
-      body: BlocProvider.value(
-        value: _chatDetailBloc,
-        child: BlocConsumer<ChatDetailBloc, ChatDetailState>(
+      body: BlocConsumer<ChatDetailBloc, ChatDetailState>(
           listener: (context, state) {
             if (state is ChatDetailLoaded) {
               _scrollToBottom();
@@ -138,7 +138,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             );
           },
         ),
-      ),
     );
   }
 
