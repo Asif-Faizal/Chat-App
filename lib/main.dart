@@ -68,6 +68,8 @@ class AuthWrapper extends StatelessWidget {
         }
       },
       builder: (context, state) {
+        final authBloc = context.read<AuthBloc>();
+        print('AuthWrapper using AuthBloc: ${authBloc.hashCode}');
         print('AuthWrapper state: ${state.runtimeType}');
         
         if (state is AuthLoading) {

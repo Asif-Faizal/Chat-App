@@ -11,12 +11,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUsecase loginUsecase;
   final LogoutUsecase logoutUsecase;
   final LocalStorageService localStorageService;
+  late final String _instanceId;
 
   AuthBloc({
     required this.loginUsecase,
     required this.logoutUsecase,
     required this.localStorageService,
   }) : super(const AuthInitial()) {
+    _instanceId = DateTime.now().millisecondsSinceEpoch.toString();
+    print('AuthBloc instance created: $_instanceId');
     on<LoginEvent>(_onLogin);
     on<LogoutEvent>(_onLogout);
     on<CheckAuthStatusEvent>(_onCheckAuthStatus);
@@ -24,25 +27,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
-    print('AuthBloc: Login attempt for ${event.loginRequest.email}');
+    print('AuthBloc ($_instanceId): Login attempt for ${event.loginRequest.email}');
     emit(const AuthLoading());
     
     final result = await loginUsecase(event.loginRequest);
     
     result.fold(
       (failure) {
-        print('AuthBloc: Login failed - ${failure.message}');
+        print('AuthBloc ($_instanceId): Login failed - ${failure.message}');
         emit(AuthError(failure.message));
       },
       (loginResponse) {
-        print('AuthBloc: Login successful for user ${loginResponse.user.id}');
+        print('AuthBloc ($_instanceId): Login successful for user ${loginResponse.user.id}');
         final authState = AuthAuthenticated(
           user: loginResponse.user,
           token: loginResponse.token,
         );
-        print('AuthBloc: About to emit AuthAuthenticated state');
+        print('AuthBloc ($_instanceId): About to emit AuthAuthenticated state');
         emit(authState);
-        print('AuthBloc: AuthAuthenticated state emitted');
+        print('AuthBloc ($_instanceId): AuthAuthenticated state emitted');
       },
     );
   }
