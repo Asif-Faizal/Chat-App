@@ -23,42 +23,22 @@ class ChatListPage extends StatefulWidget {
 }
 
 class _ChatListPageState extends State<ChatListPage> {
-  String? currentUserId;
-  String? currentUserRole;
   late ChatListBloc _chatListBloc;
 
   @override
   void initState() {
     super.initState();
     _chatListBloc = getIt<ChatListBloc>();
-    _loadUserData();
+    
+    // Use the current user from widget
+    print('Using current user: ${widget.currentUser.id}, role: ${widget.currentUser.role}');
+    _chatListBloc.add(LoadChatListEvent(widget.currentUser.id));
   }
 
   @override
   void dispose() {
     _chatListBloc.close();
     super.dispose();
-  }
-
-  Future<void> _loadUserData() async {
-    final localStorageService = getIt<LocalStorageService>();
-    currentUserId = await localStorageService.getUserId();
-    currentUserRole = await localStorageService.getUserRole();
-    
-    print('Retrieved userId: $currentUserId'); // Debug log
-    print('Retrieved userRole: $currentUserRole'); // Debug log
-    
-    if (currentUserId != null && currentUserId!.isNotEmpty) {
-      _chatListBloc.add(LoadChatListEvent(currentUserId!));
-    } else {
-      // If no userId found, show error
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('User ID not found. Please login again.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
   }
 
   @override
@@ -138,16 +118,14 @@ class _ChatListPageState extends State<ChatListPage> {
   Widget _buildChatList(List<ChatModel> chats) {
     return RefreshIndicator(
       onRefresh: () async {
-        if (currentUserId != null) {
-          _chatListBloc.add(RefreshChatListEvent(currentUserId!));
-        }
+        _chatListBloc.add(RefreshChatListEvent(widget.currentUser.id));
       },
       child: ListView.builder(
         padding: const EdgeInsets.all(8),
         itemCount: chats.length,
         itemBuilder: (context, index) {
           final chat = chats[index];
-          final otherParticipant = chat.getOtherParticipant(currentUserId ?? '');
+          final otherParticipant = chat.getOtherParticipant(widget.currentUser.id);
           
           return Card(
             margin: const EdgeInsets.only(bottom: 8),
@@ -254,7 +232,7 @@ class _ChatListPageState extends State<ChatListPage> {
                   MaterialPageRoute(
                     builder: (context) => ChatDetailPage(
                       chat: chat,
-                      currentUserId: currentUserId!,
+                      currentUserId: widget.currentUser.id,
                     ),
                   ),
                 );
@@ -330,9 +308,7 @@ class _ChatListPageState extends State<ChatListPage> {
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () {
-              if (currentUserId != null) {
-                _chatListBloc.add(LoadChatListEvent(currentUserId!));
-              }
+              _chatListBloc.add(LoadChatListEvent(widget.currentUser.id));
             },
             child: const Text('Retry'),
           ),
