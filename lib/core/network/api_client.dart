@@ -49,10 +49,24 @@ class ApiClient {
   Dio get dio => _dio;
 
   void setAuthToken(String token) {
+    if (kDebugMode) {
+      print('ApiClient: Setting auth token');
+    }
     _dio.options.headers['Authorization'] = 'Bearer $token';
   }
 
   void clearAuthToken() {
+    if (kDebugMode) {
+      print('ApiClient: Clearing auth token');
+      print('ApiClient: Token before clear: ${_dio.options.headers['Authorization']}');
+    }
     _dio.options.headers.remove('Authorization');
+    if (kDebugMode) {
+      print('ApiClient: Token after clear: ${_dio.options.headers['Authorization']}');
+    }
+  }
+
+  String? getCurrentAuthToken() {
+    return _dio.options.headers['Authorization'];
   }
 }
