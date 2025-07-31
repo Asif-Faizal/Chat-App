@@ -223,7 +223,7 @@ class _LoginPageState extends State<LoginPage> {
                                 height: 20,
                                 width: 20,
                                 child: CircularProgressIndicator(
-                                  color: AppTheme.textPrimaryColor,
+                                  color: AppTheme.textOnPrimaryColor,
                                   strokeWidth: 2,
                                 ),
                               )

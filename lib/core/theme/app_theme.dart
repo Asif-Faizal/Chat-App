@@ -15,12 +15,12 @@ class AppTheme {
   static const Color warningColor = Color(0xFFFF9800);
   
   // Background colors
-  static const Color backgroundColor = Color(0xFFF5F5F5);
+  static const Color backgroundColor = Color(0xFFF0FFF0);
   static const Color surfaceColor = Color(0xFFFFFFFF);
   static const Color cardColor = Color(0xFFFFFFFF);
   
   // Text colors
-  static const Color textPrimaryColor = Color(0xFF212121);
+  static const Color textPrimaryColor = Color(0xFF000000);
   static const Color textSecondaryColor = Color(0xFF757575);
   static const Color textLightColor = Color(0xFFBDBDBD);
   static const Color textOnPrimaryColor = Color(0xFFFFFFFF);
@@ -30,14 +30,14 @@ class AppTheme {
   static const Color dividerColor = Color(0xFFE0E0E0);
   
   // Role-specific colors
-  static const Color customerColor = Color(0xFFA3FF8B);
-  static const Color vendorColor = Color(0xFFD4ADFF);
+  static const Color customerColor = Color.fromARGB(255, 0, 55, 255);
+  static const Color vendorColor = Color.fromARGB(255, 255, 0, 0);
   
   // Message bubble colors
   static const Color sentMessageColor = Color(0xFFA3FF8B);
   static const Color receivedMessageColor = Color(0xFFFFFFFF);
-  static const Color sentMessageTextColor = Color(0xFF212121);
-  static const Color receivedMessageTextColor = Color(0xFF212121);
+  static const Color sentMessageTextColor = Color(0xFF000000);
+  static const Color receivedMessageTextColor = Color(0xFF000000);
   static const Color messageTimeColor = Color(0xFF757575);
 
   // Theme Data
@@ -51,7 +51,7 @@ class AppTheme {
         surface: surfaceColor,
         background: backgroundColor,
         error: errorColor,
-        onPrimary: textPrimaryColor,
+        onPrimary: textOnPrimaryColor,
         onSecondary: textPrimaryColor,
         onTertiary: textPrimaryColor,
         onSurface: textPrimaryColor,
@@ -61,9 +61,10 @@ class AppTheme {
       
       // App Bar Theme
       appBarTheme: const AppBarTheme(
-        backgroundColor: surfaceColor,
+        backgroundColor: backgroundColor,
         foregroundColor: textPrimaryColor,
-        elevation: 1,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: false,
         titleTextStyle: TextStyle(
           color: textPrimaryColor,
@@ -75,12 +76,24 @@ class AppTheme {
           size: 24,
         ),
       ),
+
+      dialogTheme: DialogThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        backgroundColor: surfaceColor,
+        titleTextStyle: TextStyle(
+          color: textPrimaryColor,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
       
       // Elevated Button Theme
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
-          foregroundColor: textPrimaryColor,
+          foregroundColor: textOnPrimaryColor,
           elevation: 2,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
@@ -175,8 +188,8 @@ class AppTheme {
       
       // Snackbar Theme
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: secondaryColor,
-        contentTextStyle: const TextStyle(color: textPrimaryColor),
+        backgroundColor: textPrimaryColor,
+        contentTextStyle: const TextStyle(color: textOnPrimaryColor),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
@@ -329,7 +342,7 @@ class AppTheme {
   );
   
   static const TextStyle unreadCountTextStyle = TextStyle(
-    color: textPrimaryColor,
+    color: textOnPrimaryColor,
     fontSize: 12,
     fontWeight: FontWeight.bold,
   );
@@ -386,17 +399,17 @@ class AppTheme {
   );
   
   static BoxDecoration get roleBadgeDecoration => BoxDecoration(
-    color: customerColor.withOpacity(0.2),
+    color: customerColor.withOpacity(0.15),
     borderRadius: BorderRadius.circular(12),
   );
   
   static BoxDecoration get vendorRoleBadgeDecoration => BoxDecoration(
-    color: vendorColor.withOpacity(0.2),
+    color: vendorColor.withOpacity(0.15),
     borderRadius: BorderRadius.circular(12),
   );
   
   static BoxDecoration get unreadBadgeDecoration => const BoxDecoration(
-    color: secondaryColor,
+    color: errorColor,
     shape: BoxShape.circle,
   );
   
@@ -411,7 +424,7 @@ class AppTheme {
   );
   
   static BoxDecoration get sendButtonDecoration => const BoxDecoration(
-    color: secondaryColor,
+    color: primaryColor,
     shape: BoxShape.circle,
   );
 }

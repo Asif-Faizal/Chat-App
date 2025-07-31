@@ -68,10 +68,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
         title: Row(
           children: [
             CircleAvatar(
@@ -83,7 +79,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                     : '?',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryDarkColor,
+                  color: AppTheme.textOnPrimaryColor,
                   fontSize: 16,
                 ),
               ),
@@ -300,7 +296,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                   Text(
                     DateFormat('HH:mm').format(message.createdAt),
                     style: AppTheme.messageTimeTextStyle.copyWith(
-                      color: isMe ? AppTheme.textPrimaryColor.withOpacity(0.7) : AppTheme.messageTimeColor,
+                      color:  AppTheme.messageTimeColor,
                     ),
                   ),
                 ],
@@ -354,13 +350,13 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
-                        color: AppTheme.textPrimaryColor,
+                        color: AppTheme.textOnPrimaryColor,
                         strokeWidth: 2,
                       ),
                     )
                   : Icon(
                       Icons.send,
-                      color: AppTheme.textPrimaryColor,
+                      color: AppTheme.textOnPrimaryColor,
                     ),
             ),
           ),

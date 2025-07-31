@@ -45,33 +45,6 @@ class _ChatListPageState extends State<ChatListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Chats'),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'logout') {
-                _showLogoutDialog();
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout, color: Colors.red[600]),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Logout',
-                      style: TextStyle(color: Colors.red[600]),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
       body: BlocProvider.value(
         value: _chatListBloc,
         child: BlocConsumer<ChatListBloc, ChatListState>(
@@ -94,7 +67,7 @@ class _ChatListPageState extends State<ChatListPage> {
               if (state.chats.isEmpty) {
                 return _buildEmptyState();
               }
-              return _buildChatList(state.chats);
+              return _buildChatListWithSliver(state.chats);
             } else if (state is ChatListError) {
               return _buildErrorState(state.message);
             }
@@ -108,14 +81,71 @@ class _ChatListPageState extends State<ChatListPage> {
     );
   }
 
-  Widget _buildChatList(List<ChatModel> chats) {
-    return RefreshIndicator(
-      onRefresh: () async {
-        _chatListBloc.add(RefreshChatListEvent(widget.currentUser.id));
-      },
-      child: ListView.builder(
-        padding: const EdgeInsets.all(8),
-        itemCount: chats.length,
+  Widget _buildChatListWithSliver(List<ChatModel> chats) {
+    return CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          expandedHeight: 125,
+          floating: false,
+          pinned: true,
+          backgroundColor: AppTheme.backgroundColor,
+          flexibleSpace: FlexibleSpaceBar(
+            background: Container(
+              padding: const EdgeInsets.fromLTRB(20, 110, 20, 16),
+              child: TextFormField(
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  filled: true,
+                  fillColor: AppTheme.surfaceColor,
+                  hintText: 'Search chats...',
+                  prefixIcon: const Icon(Icons.search),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          title: const Text('Chats'),
+          actions: [
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'logout') {
+                  _showLogoutDialog();
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'logout',
+                  child: Row(
+                    children: [
+                      Icon(Icons.logout, color: AppTheme.errorColor),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Logout',
+                        style: TextStyle(color: AppTheme.errorColor),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        SliverToBoxAdapter(
+          child: RefreshIndicator(
+            onRefresh: () async {
+              _chatListBloc.add(RefreshChatListEvent(widget.currentUser.id));
+            },
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: chats.length,
         itemBuilder: (context, index) {
           final chat = chats[index];
           final otherParticipant = chat.getOtherParticipant(widget.currentUser.id);
@@ -131,7 +161,7 @@ class _ChatListPageState extends State<ChatListPage> {
                       : '?',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryDarkColor,
+                    color: AppTheme.textOnPrimaryColor,
                     fontSize: 18,
                   ),
                 ),
@@ -215,6 +245,9 @@ class _ChatListPageState extends State<ChatListPage> {
           );
         },
       ),
+    ),
+  ),
+],
     );
   }
 
