@@ -25,22 +25,25 @@ class ChatDetailPage extends StatefulWidget {
 class _ChatDetailPageState extends State<ChatDetailPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  ChatDetailBloc? _chatDetailBloc;
+  bool _isInitialized = false;
 
   @override
-  void initState() {
-    super.initState();
-    // Get the bloc from the context provided by BlocProvider
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final chatDetailBloc = context.read<ChatDetailBloc>();
-      chatDetailBloc.add(LoadChatMessagesEvent(widget.chat.id));
-      chatDetailBloc.add(JoinChatEvent(widget.chat.id));
-    });
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Safely store the bloc reference when dependencies are available
+    if (!_isInitialized) {
+      _chatDetailBloc = context.read<ChatDetailBloc>();
+      _chatDetailBloc?.add(LoadChatMessagesEvent(widget.chat.id));
+      _chatDetailBloc?.add(JoinChatEvent(widget.chat.id));
+      _isInitialized = true;
+    }
   }
 
   @override
   void dispose() {
-    final chatDetailBloc = context.read<ChatDetailBloc>();
-    chatDetailBloc.add(LeaveChatEvent(widget.chat.id));
+    // Use stored reference to avoid accessing deactivated widget's context
+    _chatDetailBloc?.add(LeaveChatEvent(widget.chat.id));
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -407,7 +410,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   void _sendMessage() {
     final content = _messageController.text.trim();
-    if (content.isNotEmpty) {
+    if (content.isNotEmpty && _chatDetailBloc != null) {
       final request = SendMessageRequest(
         chatId: widget.chat.id,
         senderId: widget.currentUserId,
@@ -415,7 +418,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         messageType: 'text',
       );
 
-      context.read<ChatDetailBloc>().add(SendMessageEvent(request));
+      _chatDetailBloc!.add(SendMessageEvent(request));
       _messageController.clear();
     }
   }
