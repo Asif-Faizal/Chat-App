@@ -83,17 +83,15 @@ class _AuthWrapperState extends State<AuthWrapper> {
             socketService.disconnect();
           }
           print('AuthWrapper: Navigating to LoginPage');
-          return const LoginPage();
+          // Pass the current state to LoginPage so it can handle errors
+          return LoginPage(currentAuthState: state);
         } else if (state is AuthLoading) {
-          print('AuthWrapper: Showing loading screen');
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
+          print('AuthWrapper: Login loading - staying on current page');
+          // Don't show full screen loading for login - let LoginPage handle it
+          return LoginPage(currentAuthState: state);
         } else {
           print('AuthWrapper: Unknown state, navigating to LoginPage');
-          return const LoginPage();
+          return LoginPage(currentAuthState: state);
         }
       },
     );

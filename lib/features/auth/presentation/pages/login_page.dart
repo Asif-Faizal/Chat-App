@@ -6,7 +6,9 @@ import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final AuthState? currentAuthState;
+  
+  const LoginPage({super.key, this.currentAuthState});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -18,6 +20,37 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   String _selectedRole = 'customer';
   bool _isPasswordVisible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Set default credentials for demo
+    _emailController.text = 'swaroop.vass@gmail.com';
+    _passwordController.text = '@Tyrion99';
+    
+    // Handle error state passed from AuthWrapper
+    if (widget.currentAuthState is AuthError) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final error = widget.currentAuthState as AuthError;
+        print('LoginPage: Showing error snackbar from initState: ${error.message}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error.message),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Dismiss',
+              textColor: Colors.white,
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              },
+            ),
+          ),
+        );
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -33,30 +66,7 @@ class _LoginPageState extends State<LoginPage> {
       body: BlocConsumer<AuthBloc, AuthState>(
                  listener: (context, state) {
            print('LoginPage listener triggered with state: ${state.runtimeType}');
-           if (state is AuthError) {
-             print('LoginPage: Showing error snackbar for: ${state.message}');
-             ScaffoldMessenger.of(context).showSnackBar(
-               SnackBar(
-                 content: Text(state.message),
-                 backgroundColor: Colors.red,
-                 behavior: SnackBarBehavior.floating,
-                 duration: const Duration(seconds: 4),
-                 action: SnackBarAction(
-                   label: 'Dismiss',
-                   textColor: Colors.white,
-                   onPressed: () {
-                     ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                   },
-                 ),
-               ),
-             );
-             // Clear the error state after showing it
-             Future.delayed(const Duration(milliseconds: 500), () {
-               if (mounted) {
-                 context.read<AuthBloc>().add(const ClearErrorEvent());
-               }
-             });
-           } else if (state is AuthAuthenticated) {
+           if (state is AuthAuthenticated) {
              print('LoginPage: AuthAuthenticated received - navigation handled by AuthWrapper');
            }
          },
