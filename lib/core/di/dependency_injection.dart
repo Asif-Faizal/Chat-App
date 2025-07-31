@@ -49,7 +49,7 @@ Future<void> setupDependencyInjection() async {
   getIt.registerLazySingleton(() => SendMessageUsecase(getIt<ChatRepository>()));
 
   // Blocs
-  getIt.registerLazySingleton(() => AuthBloc(
+  getIt.registerSingleton(AuthBloc(
     loginUsecase: getIt<LoginUsecase>(),
     logoutUsecase: getIt<LogoutUsecase>(),
     localStorageService: getIt<LocalStorageService>(),

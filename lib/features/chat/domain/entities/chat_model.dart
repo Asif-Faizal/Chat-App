@@ -22,21 +22,34 @@ class ChatModel extends Equatable {
 
   factory ChatModel.fromJson(Map<String, dynamic> json) {
     try {
+      print('Parsing ChatModel from JSON: ${json.keys.toList()}');
+      
       // Parse participants safely
       List<UserModel> participantsList = [];
       if (json['participants'] is List) {
         participantsList = (json['participants'] as List)
-            .map((p) {
+            .asMap()
+            .entries
+            .map((entry) {
               try {
-                return UserModel.fromJson(p as Map<String, dynamic>);
+                final index = entry.key;
+                final participant = entry.value;
+                if (participant is Map<String, dynamic>) {
+                  return UserModel.fromJson(participant);
+                } else {
+                  print('Participant at index $index is not a Map: ${participant.runtimeType}');
+                  return null;
+                }
               } catch (e) {
-                print('Error parsing participant: $e');
+                print('Error parsing participant at index ${entry.key}: $e');
                 return null;
               }
             })
             .where((p) => p != null)
             .cast<UserModel>()
             .toList();
+      } else {
+        print('Participants field is not a List: ${json['participants']?.runtimeType}');
       }
 
       // Parse lastMessage safely
@@ -49,6 +62,16 @@ class ChatModel extends Equatable {
         if (lastMessageData['createdAt'] is String) {
           lastMessageTime = DateTime.tryParse(lastMessageData['createdAt'] as String);
         }
+      } else if (json['lastMessage'] is String) {
+        lastMessageContent = json['lastMessage'] as String;
+      }
+
+      // Parse unreadCount safely
+      int unreadCount = 0;
+      if (json['unreadCount'] is int) {
+        unreadCount = json['unreadCount'] as int;
+      } else if (json['unreadCount'] is String) {
+        unreadCount = int.tryParse(json['unreadCount'] as String) ?? 0;
       }
 
       return ChatModel(
@@ -56,12 +79,13 @@ class ChatModel extends Equatable {
         participants: participantsList,
         lastMessage: lastMessageContent,
         lastMessageTime: lastMessageTime,
-        unreadCount: json['unreadCount'] as int? ?? 0,
+        unreadCount: unreadCount,
         createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
         updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? DateTime.now(),
       );
     } catch (e) {
       print('Error parsing ChatModel: $e');
+      print('JSON data: $json');
       // Return a default chat model to prevent crashes
       return ChatModel(
         id: json['_id'] as String? ?? json['id'] as String? ?? '',

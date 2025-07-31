@@ -57,24 +57,51 @@ class ChatRepositoryImpl implements ChatRepository {
       );
 
       if (response.statusCode == 200) {
-        // The API returns chats directly as an array
-        final chatListData = response.data is List 
-            ? response.data as List<dynamic>
-            : (response.data['chats'] as List<dynamic>? ?? []);
-            
-        final chatList = chatListData
-            .map((chatJson) {
-              try {
-                return ChatModel.fromJson(chatJson as Map<String, dynamic>);
-              } catch (e) {
-                print('Error parsing chat: $e');
-                return null;
-              }
-            })
-            .where((chat) => chat != null)
-            .cast<ChatModel>()
-            .toList();
+        // Handle different possible response structures
+        List<dynamic> chatListData = [];
         
+        if (response.data is List) {
+          // Direct array response
+          chatListData = response.data as List<dynamic>;
+        } else if (response.data is Map<String, dynamic>) {
+          // Object with chats property
+          final responseMap = response.data as Map<String, dynamic>;
+          if (responseMap.containsKey('chats')) {
+            chatListData = responseMap['chats'] as List<dynamic>? ?? [];
+          } else if (responseMap.containsKey('data')) {
+            final dataField = responseMap['data'];
+            if (dataField is List) {
+              chatListData = dataField;
+            } else if (dataField is Map<String, dynamic> && dataField.containsKey('chats')) {
+              chatListData = dataField['chats'] as List<dynamic>? ?? [];
+            }
+          }
+        }
+        
+        print('Raw chat list data length: ${chatListData.length}');
+        if (chatListData.isNotEmpty) {
+          print('First item structure: ${chatListData.first}');
+        }
+            
+        final chatList = <ChatModel>[];
+        
+        for (int i = 0; i < chatListData.length; i++) {
+          try {
+            final chatItem = chatListData[i];
+            if (chatItem is Map<String, dynamic>) {
+              final chat = ChatModel.fromJson(chatItem);
+              chatList.add(chat);
+            } else {
+              print('Chat item at index $i is not a Map: ${chatItem.runtimeType}');
+            }
+          } catch (e) {
+            print('Error parsing chat at index $i: $e');
+            print('Chat data: ${chatListData[i]}');
+            // Continue processing other chats instead of failing completely
+          }
+        }
+        
+        print('Successfully parsed ${chatList.length} chats');
         return Success(chatList);
       } else {
         return Error(ServerFailure(
@@ -85,6 +112,7 @@ class ChatRepositoryImpl implements ChatRepository {
     } on DioException catch (e) {
       return Error(_handleDioError(e));
     } catch (e) {
+      print('Unexpected error in getChatList: $e');
       return Error(UnknownFailure(
         message: 'An unexpected error occurred: $e',
       ));
