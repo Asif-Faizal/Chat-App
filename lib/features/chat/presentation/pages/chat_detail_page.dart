@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/chat_model.dart';
 import '../../domain/entities/message_model.dart';
 import '../../domain/entities/send_message_request.dart';
@@ -66,10 +67,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     final otherParticipant = widget.chat.getOtherParticipant(widget.currentUserId);
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -78,14 +76,14 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundColor: Colors.blue[100],
+              backgroundColor: AppTheme.primaryLightColor,
               child: Text(
                 otherParticipant?.name.isNotEmpty == true
                     ? otherParticipant!.name[0].toUpperCase()
                     : '?',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.blue[800],
+                  color: AppTheme.primaryDarkColor,
                   fontSize: 16,
                 ),
               ),
@@ -97,18 +95,13 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                 children: [
                   Text(
                     otherParticipant?.name ?? 'Unknown User',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
                   if (otherParticipant?.role != null)
                     Text(
                       otherParticipant!.role.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: AppTheme.textSecondaryColor,
                       ),
                     ),
                 ],
@@ -125,7 +118,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),
-                  backgroundColor: Colors.red,
+                  backgroundColor: AppTheme.errorColor,
                 ),
               );
             }
@@ -162,23 +155,20 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               Icon(
                 Icons.chat_bubble_outline,
                 size: 80,
-                color: Colors.grey[400],
+                color: AppTheme.textLightColor,
               ),
               const SizedBox(height: 16),
               Text(
                 'No messages yet',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: AppTheme.textSecondaryColor,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Start the conversation by sending a message',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[500],
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppTheme.textLightColor,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -209,29 +199,26 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 80,
-              color: Colors.red[400],
+                      Icon(
+            Icons.error_outline,
+            size: 80,
+            color: AppTheme.errorColor,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Error loading messages',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: AppTheme.errorColor,
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Error loading messages',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.red[600],
-                fontWeight: FontWeight.w500,
-              ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            state.message,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppTheme.textSecondaryColor,
             ),
-            const SizedBox(height: 8),
-            Text(
-              state.message,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-              textAlign: TextAlign.center,
-            ),
+            textAlign: TextAlign.center,
+          ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
@@ -255,16 +242,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       child: Center(
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.grey[300],
-            borderRadius: BorderRadius.circular(12),
-          ),
+          decoration: AppTheme.dateSeparatorDecoration,
           child: Text(
             DateFormat('MMMM dd, yyyy').format(date),
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[700],
-              fontWeight: FontWeight.w500,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: AppTheme.textPrimaryColor,
             ),
           ),
         ),
@@ -282,14 +264,14 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           if (!isMe) ...[
             CircleAvatar(
               radius: 16,
-              backgroundColor: Colors.grey[300],
+              backgroundColor: AppTheme.textLightColor,
               child: Text(
                 message.sender?.name.isNotEmpty == true
                     ? message.sender!.name[0].toUpperCase()
                     : '?',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey[700],
+                  color: AppTheme.textSecondaryColor,
                   fontSize: 12,
                 ),
               ),
@@ -302,38 +284,23 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                 maxWidth: MediaQuery.of(context).size.width * 0.7,
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: isMe ? Colors.blue[500] : Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(18),
-                  topRight: const Radius.circular(18),
-                  bottomLeft: Radius.circular(isMe ? 18 : 4),
-                  bottomRight: Radius.circular(isMe ? 4 : 18),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
+              decoration: isMe 
+                  ? AppTheme.sentMessageBubbleDecoration
+                  : AppTheme.receivedMessageBubbleDecoration,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     message.content,
-                    style: TextStyle(
-                      color: isMe ? Colors.white : Colors.black87,
-                      fontSize: 16,
+                    style: AppTheme.messageTextStyle.copyWith(
+                      color: isMe ? AppTheme.sentMessageTextColor : AppTheme.receivedMessageTextColor,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     DateFormat('HH:mm').format(message.createdAt),
-                    style: TextStyle(
-                      color: isMe ? Colors.white70 : Colors.grey[500],
-                      fontSize: 12,
+                    style: AppTheme.messageTimeTextStyle.copyWith(
+                      color: isMe ? AppTheme.textPrimaryColor.withOpacity(0.7) : AppTheme.messageTimeColor,
                     ),
                   ),
                 ],
@@ -351,20 +318,17 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceColor,
         border: Border(
-          top: BorderSide(color: Colors.grey, width: 0.2),
+          top: BorderSide(color: AppTheme.borderColor, width: 0.2),
         ),
       ),
       child: Row(
         children: [
           Expanded(
             child: Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(25),
-              ),
+              decoration: AppTheme.messageInputDecoration,
               child: TextField(
                 controller: _messageController,
                 decoration: const InputDecoration(
@@ -382,24 +346,21 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           ),
           const SizedBox(width: 8),
           Container(
-            decoration: const BoxDecoration(
-              color: Colors.blue,
-              shape: BoxShape.circle,
-            ),
+            decoration: AppTheme.sendButtonDecoration,
             child: IconButton(
               onPressed: isSending ? null : _sendMessage,
               icon: isSending
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
-                        color: Colors.white,
+                        color: AppTheme.textPrimaryColor,
                         strokeWidth: 2,
                       ),
                     )
-                  : const Icon(
+                  : Icon(
                       Icons.send,
-                      color: Colors.white,
+                      color: AppTheme.textPrimaryColor,
                     ),
             ),
           ),

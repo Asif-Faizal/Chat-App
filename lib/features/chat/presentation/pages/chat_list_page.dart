@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/di/dependency_injection.dart';
 import '../../../../core/models/user_model.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/pages/login_page.dart';
@@ -44,16 +45,8 @@ class _ChatListPageState extends State<ChatListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text(
-          'Chats',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 1,
+        title: const Text('Chats'),
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
@@ -87,7 +80,7 @@ class _ChatListPageState extends State<ChatListPage> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),
-                  backgroundColor: Colors.red,
+                  backgroundColor: AppTheme.errorColor,
                 ),
               );
             }
@@ -128,33 +121,23 @@ class _ChatListPageState extends State<ChatListPage> {
           final otherParticipant = chat.getOtherParticipant(widget.currentUser.id);
           
           return Card(
-            margin: const EdgeInsets.only(bottom: 8),
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
             child: ListTile(
-              contentPadding: const EdgeInsets.all(16),
               leading: CircleAvatar(
                 radius: 25,
-                backgroundColor: Colors.blue[100],
+                backgroundColor: AppTheme.primaryLightColor,
                 child: Text(
                   otherParticipant?.name.isNotEmpty == true
                       ? otherParticipant!.name[0].toUpperCase()
                       : '?',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Colors.blue[800],
+                    color: AppTheme.primaryDarkColor,
                     fontSize: 18,
                   ),
                 ),
               ),
               title: Text(
                 otherParticipant?.name ?? 'Unknown User',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                ),
               ),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,20 +149,17 @@ class _ChatListPageState extends State<ChatListPage> {
                         horizontal: 8,
                         vertical: 2,
                       ),
-                      decoration: BoxDecoration(
-                        color: otherParticipant!.role == 'vendor'
-                            ? Colors.orange[100]
-                            : Colors.green[100],
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      decoration: otherParticipant!.role == 'vendor'
+                          ? AppTheme.vendorRoleBadgeDecoration
+                          : AppTheme.roleBadgeDecoration,
                       child: Text(
                         otherParticipant.role.toUpperCase(),
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                           color: otherParticipant.role == 'vendor'
-                              ? Colors.orange[800]
-                              : Colors.green[800],
+                              ? AppTheme.vendorColor
+                              : AppTheme.customerColor,
                         ),
                       ),
                     ),
@@ -188,9 +168,8 @@ class _ChatListPageState extends State<ChatListPage> {
                       chat.lastMessage!,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.textSecondaryColor,
                       ),
                     ),
                 ],
@@ -202,26 +181,18 @@ class _ChatListPageState extends State<ChatListPage> {
                   if (chat.lastMessageTime != null)
                     Text(
                       _formatTime(chat.lastMessageTime!),
-                      style: TextStyle(
-                        color: Colors.grey[500],
-                        fontSize: 12,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textLightColor,
                       ),
                     ),
                   if (chat.unreadCount > 0) ...[
                     const SizedBox(height: 4),
                     Container(
                       padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
+                      decoration: AppTheme.unreadBadgeDecoration,
                       child: Text(
                         chat.unreadCount.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: AppTheme.unreadCountTextStyle,
                       ),
                     ),
                   ],
@@ -255,23 +226,20 @@ class _ChatListPageState extends State<ChatListPage> {
           Icon(
             Icons.chat_bubble_outline,
             size: 80,
-            color: Colors.grey[400],
+            color: AppTheme.textLightColor,
           ),
           const SizedBox(height: 16),
           Text(
             'No chats yet',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: AppTheme.textSecondaryColor,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Start a conversation to see your chats here',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppTheme.textLightColor,
             ),
             textAlign: TextAlign.center,
           ),
@@ -288,23 +256,20 @@ class _ChatListPageState extends State<ChatListPage> {
           Icon(
             Icons.error_outline,
             size: 80,
-            color: Colors.red[400],
+            color: AppTheme.errorColor,
           ),
           const SizedBox(height: 16),
           Text(
             'Error loading chats',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.red[600],
-              fontWeight: FontWeight.w500,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: AppTheme.errorColor,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             message,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppTheme.textSecondaryColor,
             ),
             textAlign: TextAlign.center,
           ),
@@ -358,7 +323,7 @@ class _ChatListPageState extends State<ChatListPage> {
             },
             child: Text(
               'Logout',
-              style: TextStyle(color: Colors.red[600]),
+              style: TextStyle(color: AppTheme.errorColor),
             ),
           ),
         ],
